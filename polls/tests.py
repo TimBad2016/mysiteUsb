@@ -55,9 +55,12 @@ def create_question(question_text, days):
 class QuestionViewTest(TestCase):
 
     def test_index_view_with_no_question(self):
-
+        """
+        If no questions exist, an appropriate message should be displayed.
+        :return: None
+        """
         response = self.client.get(reverse('polls:index'))
-        #self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response.content, "No polls are available.")
         self.assertQuerysetEqual(response.context("latest_question_list"), [])
 
