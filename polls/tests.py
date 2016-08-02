@@ -61,10 +61,47 @@ class QuestionViewTest(TestCase):
         """
         response = self.client.get(reverse('polls:index'))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response.content, "No polls are available.")
-        self.assertQuerysetEqual(response.context("latest_question_list"), [])
+        self.assertContains(response, "No polls are available.")
+        self.assertQuerysetEqual(response.context['latest_question_list'], [])
 
+    def test_index_view_with_a_future_question(self):
+        """
+        Question with pub_date in the future should not be displayed on
+        the index page.
+        :return: None
+        """
+        create_question(question_text="Future question", days=30)
+        response = self.client.get(reverse('polls:index'))
+        self.assertContains(response, "No polls are available.")
+        self.assertQuerysetEqual(response.context['latest_question_list'], [])
 
+    def test_index_view_with_a_past_question(self):
+        """
+        Questions with a pub_date in the past should be displayed on the
+        index page.
+        :return: None
+        """
+        create_question(question_text="Past question.", days=-30)
+        response = self.client.get(reverse('polls:index'))
+        self.assertQuerysetEqual(response.context['latest_question_list'], ['<Question: Past question.>'])
 
+    def test_index_view_with_future_question_and_past_question(self):
+        """
+        Even if both past and future questions exist, only past questions
+        should be displayed.
+        """
+        create_question(question_text="Past question.", days=-30)
+        create_question(question_text="Future question.", days=30)
+        response = self.client.get(reverse('polls:index'))
+        self.assertQuerysetEqual(
+            response.context['latest_question_list'], ['<Question: Past question.>']
+        )
 
+    def test_index_view_with_two_past_questions(self):
 
+        create_question(question_text="Past question2.", days=-30)
+        create_question(question_text="Past question1.", days=-5)
+        response = self.client.get(reverse('polls:index'))
+
+        self.assertQuerysetEqual(response.context['latest_question_list'], ['<Question: Past question1.>',
+                                                                            '<Question: Past question2.>'])
