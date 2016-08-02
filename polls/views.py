@@ -11,8 +11,11 @@ class IndexView(generic.ListView):
     contexte_object_name = "latest_question_list"
 
     def get_queryset(self):
-       """ return the latest five question """
-       return Question.objects.order_by("-pub_date")[:5]
+
+        """
+        return the latest five question
+        """
+        return Question.objects.order_by("-pub_date")[:5]
 
 class DetailView(generic.DetailView):
     template_name = "polls/detail.html"
