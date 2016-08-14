@@ -1,13 +1,44 @@
 import datetime
+import Factory
 
-from django.test import TestCase
+from django.test import TestCase, RequestFactory
 from django.utils import timezone
 from django.core.urlresolvers import reverse
 
 from .models import Question
+from django.contrib.auth.models import User, AnonymousUser
+from .views import IndexView
 
 
-class QuestionMethodeTests(TestCase):
+class QuestionFactory(Factory.Factory):
+    def post_make(self):
+        pass
+
+
+class SimpleTest(TestCase):
+    def setUp(self):
+        # Every test needs access to the request factory
+        self.factory = RequestFactory()
+        self.user = User.objects.create_user(
+                username='jacob', email='jacob@thebeatles.com', password='top_secret')
+
+    def test_detail(self):
+        # Create an instance of a GET request.
+        request = self.factory.get(reverse('polls:index'))
+
+        # Recall that middleware are not supported. You can simulate a
+        # logged-in user by setting request.user manually.
+        request.user = self.user
+        # Or you can simulate an anonymous user by setting request.user to
+        # an AnonymousUser instance.
+        request.user = AnonymousUser()
+
+        # Test my_view() as if it were deployed at /polls/
+        response = IndexView.as_view()(request)
+        self.assertEqual(response.status_code, 200)
+
+
+class QuestionMethodTests(TestCase):
     def test_was_published_recently_with_future_question(self):
         """
         was_published_recently () should return False for questions whose
@@ -28,7 +59,7 @@ class QuestionMethodeTests(TestCase):
         old_question = Question(pub_date=time)
         self.assertEqual(old_question.was_published_recently(), False)
 
-    def test_was_publlished_recently_with_recent_question(self):
+    def test_was_published_recently_with_recent_question(self):
         """
         was_published_recently() should return True for questions whose
         pub_date is within the last day.
@@ -53,7 +84,6 @@ def create_question(question_text, days):
 
 
 class QuestionViewTest(TestCase):
-
     def test_index_view_with_no_question(self):
         """
         If no questions exist, an appropriate message should be displayed.
@@ -94,11 +124,10 @@ class QuestionViewTest(TestCase):
         create_question(question_text="Future question.", days=30)
         response = self.client.get(reverse('polls:index'))
         self.assertQuerysetEqual(
-            response.context['latest_question_list'], ['<Question: Past question.>']
+                response.context['latest_question_list'], ['<Question: Past question.>']
         )
 
     def test_index_view_with_two_past_questions(self):
-
         create_question(question_text="Past question2.", days=-30)
         create_question(question_text="Past question1.", days=-5)
         response = self.client.get(reverse('polls:index'))

@@ -1,9 +1,11 @@
 from django.shortcuts import render, get_object_or_404
-from django.http import  HttpResponseRedirect
+from django.http import HttpResponseRedirect
 from .models import Question, Choice
 from django.core.urlresolvers import reverse
 from django.views import generic
 from django.utils import timezone
+
+
 # Create your views here.
 
 
@@ -12,7 +14,6 @@ class IndexView(generic.ListView):
     context_object_name = "latest_question_list"
 
     def get_queryset(self):
-
         """
         Return the last five published questions (not including those set to be
         published in the future).
@@ -22,12 +23,12 @@ class IndexView(generic.ListView):
 
 class DetailView(generic.DetailView):
     template_name = "polls/detail.html"
-    model = Question 
+    model = Question
 
 
 class ResultsView(generic.DetailView):
     template_name = "polls/results.html"
-    model = Question 
+    model = Question
 
 
 def vote(request, question_id):
@@ -37,9 +38,9 @@ def vote(request, question_id):
     except (KeyError, Choice.DoesNotExist):
         # Redisplay the question voting form.
         return render(request, 'polls/detail.html', {
-    'question': question,
-    'error_message': "You didn't select a choice.",
-    })
+            'question': question,
+            'error_message': "You didn't select a choice.",
+        })
     else:
         selected_choice.votes += 1
         selected_choice.save()
